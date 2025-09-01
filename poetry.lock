@@ -380,17 +380,6 @@ python-dateutil = ">=2.7"
 dev = ["meson-python (>=0.13.1,<0.17.0)", "pybind11 (>=2.13.2,!=2.13.3)", "setuptools (>=64)", "setuptools_scm (>=7)"]
 
 [[package]]
-name = "np"
-version = "1.0.2"
-description = "np = numpy++: numpy with added convenience functionality"
-optional = false
-python-versions = "*"
-groups = ["main"]
-files = [
-    {file = "np-1.0.2.tar.gz", hash = "sha256:781265283f3823663ad8fb48741aae62abcf4c78bc19f908f8aa7c1d3eb132f8"},
-]
-
-[[package]]
 name = "numpy"
 version = "2.3.2"
 description = "Fundamental package for array computing in Python"
@@ -656,4 +645,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12"
-content-hash = "99cc3e43da7956004076cb11607866e60cb386642a2a6a5546495c4e035f9378"
+content-hash = "38c7da81b76ccb4e42f581edce17850f2400b3276cb871269a740bb85d22d90e"

@@ -1,3 +1,4 @@
+import math
 import random
 import numpy as np
 import matplotlib.pyplot as plt
@@ -11,7 +12,7 @@ from commons.utils import (
     Route, create_random_route
 )
 POPULATION_SIZE = 30
-ELITISM_SIZE = 5 # TODO: Mudar para 10% da populacao
+ELITISM_SIZE = math.ceil(POPULATION_SIZE / 10)
 MUTATION_RATE = 0.015
 TOURNAMENT_SIZE = 5
 GENERATIONS = 500

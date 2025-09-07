@@ -29,6 +29,11 @@ def route_length(route: Route, D: np.ndarray) -> float:
     return total
 
 
+def create_random_route(cities: list[int], rng: random.Random) -> Route:
+    route = list(cities)
+    rng.shuffle(route[1:])
+    return route
+
 def create_first_route(D: np.ndarray, start: int = 0) -> Route:
     n = len(D)
     unvisited = set(range(n))
@@ -42,12 +47,9 @@ def create_first_route(D: np.ndarray, start: int = 0) -> Route:
     return route
 
 
-# 2-Opt operações
-
-
 def two_opt_swap(route: Route, i: int, k: int) -> Route:
-    # Reverte o segmento [i:k]
     return route[:i] + list(reversed(route[i:k + 1])) + route[k + 1:]
+
 
 def load_points_from_csv(path: str) -> list[Point]:
     pts: list[Point] = []
@@ -81,11 +83,6 @@ def plot_route(pts, route, title=None, show_ids=False):
     plt.plot(xs + [xs[0]], ys + [ys[0]], 'o-', markersize=8)  # linha do percurso com pontos
     plt.plot(xs[0], ys[0], 'o', markersize=10, color='green', label='Início')
 
-    # Adiciona o nome das cidades (id) ao lado de cada ponto
-    for idx in route:
-        x, y = pts[idx][0], pts[idx][1]
-        cidade = pts[idx][2]
-        plt.text(x, y, str(cidade), fontsize=9, color='red', ha='right', va='bottom')
 
     if title:
         plt.title(title)

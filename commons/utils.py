@@ -74,33 +74,28 @@ def load_points_from_csv(path: str) -> list[Point]:
     return pts
 
 
-def export_results_to_csv(all_results: list):
-    """
-    Exporta os resultados completos e um resumo agregado para arquivos CSV,
-    usando um timestamp no nome do arquivo para garantir unicidade.
-    """
+def export_results_to_csv(all_results: list, algoritm_name: str):
     if not all_results:
         print("Nenhum resultado para exportar.")
         return
 
-    # --- NOVO: Gera um timestamp para usar no nome do arquivo ---
-    # Pega a data e hora atuais
+    if algoritm_name == "simulated_annealing":
+        key_name = "schedule"
+    elif algoritm_name == "genetic_algorithm":
+        key_name = "selection_method"
+
     now = datetime.now()
-    # Formata como 'AAAA-MM-DD_HH-MM-SS' (ex: '2025-09-07_22-27-52')
     timestamp = now.strftime("%Y-%m-%d_%H-%M-%S")
-    # -----------------------------------------------------------
 
     print(f"\nExportando resultados para arquivos CSV com o timestamp '{timestamp}'...")
 
-    # --- GERAÇÃO DO CSV DETALHADO ---
     detailed_headers = list(all_results[0].keys())
     detailed_headers.remove('route')
     detailed_headers.append('route_str')
     if 'run_id' not in detailed_headers:
         detailed_headers.insert(0, 'run_id')
 
-    # NOVO: Usa o timestamp no nome do arquivo
-    detailed_filename = f"resultados_completos_{timestamp}.csv"
+    detailed_filename = f"{algoritm_name}_resultados_completos_{timestamp}.csv"
     with open(detailed_filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=detailed_headers)
         writer.writeheader()
@@ -117,21 +112,21 @@ def export_results_to_csv(all_results: list):
 
     # --- GERAÇÃO DO CSV RESUMIDO ---
     summary_headers = [
-        'schedule', 'config_name', 'num_execucoes',
+        key_name, 'config_name', 'num_execucoes',
         'comprimento_medio', 'comprimento_minimo', 'comprimento_maximo', 'comprimento_desvio_padrao',
         'tempo_medio_s', 'tempo_minimo_s', 'tempo_maximo_s'
     ]
     
     grouped = defaultdict(list)
     for res in all_results:
-        grouped[(res['schedule'], res['config_name'])].append(res)
+        grouped[(res[key_name], res['config_name'])].append(res)
 
     summary_data = []
-    for (schedule, config), results in grouped.items():
+    for (method, config), results in grouped.items():
         lengths = [r['length'] for r in results]
         times = [r['time'] for r in results]
         summary_data.append({
-            'schedule': schedule,
+            key_name: method,
             'config_name': config,
             'num_execucoes': len(results),
             'comprimento_medio': np.mean(lengths),
@@ -144,7 +139,7 @@ def export_results_to_csv(all_results: list):
         })
 
     # NOVO: Usa o mesmo timestamp no nome do segundo arquivo
-    summary_filename = f"resumo_resultados_{timestamp}.csv"
+    summary_filename = f"{algoritm_name}_resumo_resultados_{timestamp}.csv"
     with open(summary_filename, 'w', newline='', encoding='utf-8') as f:
         writer = csv.DictWriter(f, fieldnames=summary_headers)
         writer.writeheader()
@@ -224,3 +219,62 @@ def plot_results_scatterplot(results: list, title: str, color_map: dict):
 
     # Ajusta o layout para garantir que a legenda externa caiba na figura
     fig.tight_layout(rect=[0, 0, 0.85, 1])
+
+def get_best_and_worst_results(all_results: list):
+    best_result = min(all_results, key=lambda r: r['length'])
+    worst_result = max(all_results, key=lambda r: r['length'])
+
+    return best_result, worst_result
+
+def print_overall_results(best_overall_result: dict, worst_overall_result: dict, key_name: str):
+    print("\n\n" + "=" * 80)
+    print("RESUMO GERAL DE TODAS AS EXECUÇÕES")
+    print("=" * 80)
+
+    print("\nMELHOR RESULTADO ENCONTRADO:")
+    print(f"   Comprimento: {best_overall_result['length']:.4f}")
+    print(f"   Tempo:         {best_overall_result['time']:.4f}s")
+    print(f"   Seletion method: '{best_overall_result[key_name]}'")
+    print(f"   Configuração:  '{best_overall_result['config_name']}'")
+
+    print("\nPIOR RESULTADO ENCONTRADO:")
+    print(f"   Comprimento: {worst_overall_result['length']:.4f}")
+    print(f"   Tempo:         {worst_overall_result['time']:.4f}s")
+    print(f"   Seletion method: '{worst_overall_result[key_name]}'")
+    print(f"   Configuração:  '{worst_overall_result['config_name']}'")
+    print("=" * 80)
+
+def plot_results(
+    pts: list[tuple[float, float, str]],
+    best_result: dict,
+    worst_result: dict,
+    all_run_results: list[dict],
+    methods: list[str],
+    key_name: str,
+    color_map: dict[str, str]
+):
+    print(f"\nGerando gráficos da melhor e pior rota geral...")
+
+    best_title = (
+        f"Melhor Rota Geral (Comprimento: {best_result['length']:.2f})\n"
+        f"{key_name.capitalize()}: {best_result[key_name]} | Config: {best_result['config_name']}"
+    )
+    plot_route(pts, best_result["route"], best_title)
+
+    worst_title = (
+        f"Pior Rota Geral (Comprimento: {worst_result['length']:.2f})\n"
+        f"{key_name.capitalize()}: {worst_result[key_name]} | Config: {worst_result['config_name']}"
+    )
+    plot_route(pts, worst_result["route"], worst_title)
+
+    print(f"\nGerando gráficos de dispersão por {key_name}...")
+    for method in methods:
+        results_for_method = [
+            r for r in all_run_results if r[key_name] == method
+        ]
+
+        scatter_title = (
+            f"Resultados das Configurações (Schedule: {method.capitalize()})"
+        )
+
+        plot_results_scatterplot(results_for_method, scatter_title, color_map)

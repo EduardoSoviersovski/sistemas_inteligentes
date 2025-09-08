@@ -1,23 +1,58 @@
 import math
 import random
+import time
+
 import numpy as np
-import matplotlib.pyplot as plt
+from matplotlib import pyplot as plt
 
 from commons.utils import (
     route_length,
     load_points_from_csv,
     distance_matrix,
-    plot_route,
     two_opt_swap,
-    Route, create_random_route
+    Route, create_random_route, export_results_to_csv, get_best_and_worst_results,
+    print_overall_results, plot_results
 )
-POPULATION_SIZE = 30
-ELITISM_SIZE = math.ceil(POPULATION_SIZE / 10)
-MUTATION_RATE = 0.015
-TOURNAMENT_SIZE = 5
-GENERATIONS = 500
 FILE = "files/50.csv"
 PLOT = True
+
+configurations = [
+    {
+        "name": "1: Clássica e Balanceada",
+        "POPULATION_SIZE": 100,
+        "MUTATION_RATE": 0.01,
+        "TOURNAMENT_SIZE": 5,
+        "GENERATIONS": 200,
+    },
+    {
+        "name": "2: Rápida e Agressiva",
+        "POPULATION_SIZE": 30,
+        "MUTATION_RATE": 0.005,
+        "TOURNAMENT_SIZE": 7,
+        "GENERATIONS": 100,
+    },
+    {
+        "name": "3: Lenta e Exaustiva",
+        "POPULATION_SIZE": 300,
+        "MUTATION_RATE": 0.05,
+        "TOURNAMENT_SIZE": 3,
+        "GENERATIONS": 500,
+    },
+    {
+        "name": "4: Alta Mutação",
+        "POPULATION_SIZE": 150,
+        "MUTATION_RATE": 0.10,
+        "TOURNAMENT_SIZE": 2,
+        "GENERATIONS": 300,
+    },
+]
+
+color_map = {
+    "1: Rápida e Agressiva": "#9400D3",  # Roxo Escuro
+    "2: Clássica e Balanceada": "#FF8C00",  # Laranja Escuro
+    "3: Lenta e Exaustiva": "#008080",  # Teal
+    "4: Alta Mutação (Foco em Diversidade)": "#9400D3", # Roxo
+}
 
 def initial_population(
         pop_size: int, dist_matrix: np.ndarray, rng: random.Random
@@ -34,20 +69,34 @@ def rank_routes(population: list[Route], dist_matrix: np.ndarray) -> list[tuple[
         fitness_results[i] = 1 / route_length(route, dist_matrix)
     return sorted(fitness_results.items(), key=lambda x: x[1], reverse=True)
 
-#TODO: Testar com roleta russa. Testar removendo um elemento da lista caso dele seja selecionado (evitar duplicados)
 def selection(
+        selection_method: str,
         ranked_population: list[tuple[int, float]],
         population: list[Route],
+        elitism_size: int,
+        tournument_size: int,
         rng: random.Random
 ) -> list[Route]:
     selection_results = []
-    for i in range(ELITISM_SIZE):
+    for i in range(elitism_size):
         selection_results.append(population[ranked_population[i][0]])
 
-    for _ in range(len(population) - ELITISM_SIZE):
-        tournament = rng.sample(ranked_population, TOURNAMENT_SIZE)
-        winner = max(tournament, key=lambda x: x[1])
-        selection_results.append(population[winner[0]])
+    if selection_method == "roulette":
+        fitness_sum = sum(fitness for _, fitness in ranked_population)
+        probabilities = [fitness / fitness_sum for _, fitness in ranked_population]
+        selected_indices = rng.choices(
+            [idx for idx, _ in ranked_population],
+            weights=probabilities,
+            k=len(population) - elitism_size
+        )
+        for idx in selected_indices:
+            selection_results.append(population[idx])
+        return selection_results
+    elif selection_method == "tournament":
+        for _ in range(len(population) - elitism_size):
+            tournament = rng.sample(ranked_population, tournument_size)
+            winner = max(tournament, key=lambda x: x[1])
+            selection_results.append(population[winner[0]])
     return selection_results
 
 # Order Crossover (OX)
@@ -68,42 +117,46 @@ def crossover(parent1: Route, parent2: Route, rng: random.Random) -> Route:
     return child
 
 
-def breed_population(mating_pool: list[Route], rng: random.Random) -> list[Route]:
+def breed_population(mating_pool: list[Route], elitism_size: int, rng: random.Random) -> list[Route]:
     children = []
 
-    children.extend(mating_pool[:ELITISM_SIZE])
+    children.extend(mating_pool[:elitism_size])
 
     pool = rng.sample(mating_pool, len(mating_pool))
-    for i in range(len(mating_pool) - ELITISM_SIZE):
+    for i in range(len(mating_pool) - elitism_size):
         child = crossover(pool[i], pool[len(mating_pool) - i - 1], rng)
         children.append(child)
 
     return children
 
-# TODO: Testar aumentar o mutation rate a cada geracao
-def mutate(route: Route, rng: random.Random) -> Route:
-    if rng.random() < MUTATION_RATE:
+def mutate(route: Route, mutation_rate: int, rng: random.Random) -> Route:
+    if rng.random() < mutation_rate:
         i, k = sorted(rng.sample(range(len(route)), 2))
         return two_opt_swap(route, i, k)
     return route
 
 
-def mutate_population(population: list[Route], rng: random.Random) -> list[Route]:
+def mutate_population(population: list[Route], mutation_rate: int, rng: random.Random) -> list[Route]:
     mutated_pop = [population[0]]
     for route in population[1:]:
-        mutated_pop.append(mutate(route, rng))
+        mutated_pop.append(mutate(route, mutation_rate, rng))
     return mutated_pop
 
 
-def genetic_algorithm(dist_matrix: np.ndarray, rng: random.Random):
-    population = initial_population(POPULATION_SIZE, dist_matrix, rng)
+def genetic_algorithm(configuration: dict, selection_method: str, dist_matrix: np.ndarray, rng: random.Random):
+    population_size = configuration["POPULATION_SIZE"]
+    mutation_rate = configuration["MUTATION_RATE"]
+    tournament_size = configuration["TOURNAMENT_SIZE"]
+    generations = configuration["GENERATIONS"]
+    elitism_size = math.ceil(population_size / 10)
+    population = initial_population(population_size, dist_matrix, rng)
 
     best_route = None
     best_distance = float('inf')
 
     print("Iniciando evolução...")
 
-    for gen in range(GENERATIONS):
+    for gen in range(generations):
         ranked_pop = rank_routes(population, dist_matrix)
         current_best_idx, _ = ranked_pop[0]
         current_best_dist = route_length(population[current_best_idx], dist_matrix)
@@ -112,12 +165,9 @@ def genetic_algorithm(dist_matrix: np.ndarray, rng: random.Random):
             best_distance = current_best_dist
             best_route = population[current_best_idx]
 
-        if (gen + 1) % 10 == 0:
-            print(f"Geração {gen + 1}: Melhor Distância = {best_distance:.4f}")
-
-        selected = selection(ranked_pop, population, rng)
-        children = breed_population(selected, rng)
-        population = mutate_population(children, rng)
+        selected = selection(selection_method, ranked_pop, population, elitism_size, tournament_size, rng)
+        children = breed_population(selected, elitism_size, rng)
+        population = mutate_population(children, mutation_rate, rng)
 
     return best_route, best_distance
 
@@ -127,14 +177,51 @@ def main():
 
     pts = load_points_from_csv(FILE)
     dist_matrix = distance_matrix(pts)
-    best_route, best_distance = genetic_algorithm(dist_matrix, rng)
+    all_run_results = []
+    selection_methods = ["tournament", "roulette"]
+    for selection_method in selection_methods:
+        for configuration in configurations:
+            print(
+                f"Executando: Config='{configuration['name']}'..."
+            )
+            for i in range(50):
+                start_time = time.time()
+                best_route, best_distance = genetic_algorithm(configuration, selection_method, dist_matrix, rng)
+                end_time = time.time()
+                execution_time = end_time - start_time
 
-    print("\nEvolução finalizada!")
-    print(f"Melhor rota encontrada: {best_route}")
-    print(f"Distância: {best_distance:.4f}")
+                all_run_results.append(
+                    {
+                        "route": best_route,
+                        "length": best_distance,
+                        "time": execution_time,
+                        "selection_method": selection_method,
+                        "config_name": configuration["name"],
+                    }
+                )
+                print(
+                    f"  -> Execução {i+1:02d}: Comprimento = {best_distance:.4f}, Tempo = {execution_time:.4f}s"
+                )
+    if not all_run_results:
+        print("Nenhum resultado para analisar.")
+        return
+
+    best_overall_result, worst_overall_result = get_best_and_worst_results(all_run_results)
+
+    print_overall_results(best_overall_result, worst_overall_result, "selection_method")
+
+    export_results_to_csv(all_run_results, "genetic_algorithm")
 
     if PLOT:
-        plot_route(pts, best_route, f"AG – melhor rota {best_distance:.4f}", show_ids=True)
+        plot_results(
+            pts,
+            best_overall_result,
+            worst_overall_result,
+            all_run_results,
+            selection_methods,
+            "selection_method",
+            color_map
+        )
         plt.show()
 
 

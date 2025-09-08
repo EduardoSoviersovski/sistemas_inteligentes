@@ -8,20 +8,16 @@ from matplotlib import pyplot as plt
 
 from commons.utils import (
     export_results_to_csv,
-    plot_results_scatterplot,
     route_length,
     two_opt_swap,
     Route,
     load_points_from_csv,
     distance_matrix,
-    plot_route,
-    create_first_route,
+    create_first_route, get_best_and_worst_results, print_overall_results, plot_results,
 )
 
 TMIN = 0.001
-# ALPHA = 0.98
-# LOG_ALPHA = 1.0
-FILE = "files/20.csv"
+FILE = "files/50.csv"
 PLOT = True
 
 
@@ -54,16 +50,14 @@ def simulated_annealing(
                 if current_cost < best_cost:
                     best, best_cost = current[:], current_cost
         T = schedule_handler(
-            T0, T, ITERS_PER_T, iteration, ALPHA, LOG_ALPHA, BETA, schedule
+            T, iteration, ALPHA, LOG_ALPHA, BETA, schedule
         )
         iteration += 1
     return best, best_cost
 
 
 def schedule_handler(
-    t0: float,
     t: float,
-    iters_per_t: int,
     iteration: int,
     alpha: float,
     log_alpha: float,
@@ -118,19 +112,15 @@ def main():
         "3: Lenta e Exaustiva": "#008080",  # Teal
     }
 
-    # 1. Lista ÚNICA para guardar TODOS os resultados
     all_run_results = []
 
     cooling_schedule = ["linear", "geometric", "logarithmic"]
-    # cooling_schedule = ["logarithmic"]
-
-    # --- LAÇOS DE EXECUÇÃO ---
     for schedule in cooling_schedule:
         for configuration in configurations:
             print(
                 f"Executando: Schedule='{schedule}', Config='{configuration['name']}'..."
             )
-            for i in range(200):
+            for i in range(5):
                 start_time = time.time()
                 route, length = simulated_annealing(
                     dist_matrix, configuration, schedule
@@ -151,71 +141,26 @@ def main():
                     f"  -> Execução {i+1:02d}: Comprimento = {length:.4f}, Tempo = {execution_time:.4f}s"
                 )
 
-    # --- ANÁLISE E PLOTAGEM GERAL (APÓS TODAS AS EXECUÇÕES) ---
     if not all_run_results:
         print("Nenhum resultado para analisar.")
         return
 
-    # 3. Encontra o melhor e o pior resultado GERAL de toda a lista
-    best_overall_result = min(all_run_results, key=lambda r: r["length"])
-    worst_overall_result = max(all_run_results, key=lambda r: r["length"])
+    best_overall_result, worst_overall_result = get_best_and_worst_results(all_run_results)
 
-    print("\n\n" + "=" * 80)
-    print("RESUMO GERAL DE TODAS AS EXECUÇÕES")
-    print("=" * 80)
+    print_overall_results(best_overall_result, worst_overall_result, "schedule")
 
-    print("\nMELHOR RESULTADO ENCONTRADO:")
-    print(f"   Comprimento: {best_overall_result['length']:.4f}")
-    print(f"   Tempo:         {best_overall_result['time']:.4f}s")
-    print(f"   Schedule:      '{best_overall_result['schedule']}'")
-    print(f"   Configuração:  '{best_overall_result['config_name']}'")
-
-    print("\nPIOR RESULTADO ENCONTRADO:")
-    print(f"   Comprimento: {worst_overall_result['length']:.4f}")
-    print(f"   Tempo:         {worst_overall_result['time']:.4f}s")
-    print(f"   Schedule:      '{worst_overall_result['schedule']}'")
-    print(f"   Configuração:  '{worst_overall_result['config_name']}'")
-    print("=" * 80)
-
-    export_results_to_csv(all_run_results)
-
+    export_results_to_csv(all_run_results, "simulated_annealing")
     if PLOT:
-        # Plota a melhor e a pior rota geral
-        print("\nGerando gráficos da melhor e pior rota geral...")
-
-        # --- PLOT DA MELHOR ROTA GERAL ---
-        best_title = (
-            f"Melhor Rota Geral (Comprimento: {best_overall_result['length']:.2f})\n"
-            f"Schedule: {best_overall_result['schedule']} | Config: {best_overall_result['config_name']}"
+        plot_results(
+            pts,
+            best_overall_result,
+            worst_overall_result,
+            all_run_results,
+            cooling_schedule,
+            "schedule",
+            color_map
         )
-        plot_route(pts, best_overall_result["route"], best_title)
-
-        # --- PLOT DA PIOR ROTA GERAL ---
-        worst_title = (
-            f"Pior Rota Geral (Comprimento: {worst_overall_result['length']:.2f})\n"
-            f"Schedule: {worst_overall_result['schedule']} | Config: {worst_overall_result['config_name']}"
-        )
-        plot_route(pts, worst_overall_result["route"], worst_title)
-
-        # Loop para criar um GRÁFICO DE DISPERSÃO por schedule
-        print("\nGerando gráficos de dispersão por schedule...")
-        for schedule in cooling_schedule:
-            # Filtra os resultados para o schedule atual
-            results_for_schedule = [
-                r for r in all_run_results if r["schedule"] == schedule
-            ]
-
-            # Cria o título para o gráfico
-            scatter_title = (
-                f"Resultados das Configurações (Schedule: {schedule.capitalize()})"
-            )
-
-            # Chama a nova e simples função de plotagem
-            plot_results_scatterplot(results_for_schedule, scatter_title, color_map)
-
-        print("\nExibindo todos os gráficos...")
         plt.show()
-
 
 if __name__ == "__main__":
     main()

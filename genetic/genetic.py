@@ -48,10 +48,10 @@ configurations = [
 ]
 
 color_map = {
-    "1: Rápida e Agressiva": "#9400D3",  # Roxo Escuro
-    "2: Clássica e Balanceada": "#FF8C00",  # Laranja Escuro
+    "1: Clássica e Balanceada": "#9400D3",  # Roxo
+    "2: Rápida e Agressiva": "#FF8C00",  # Laranja
     "3: Lenta e Exaustiva": "#008080",  # Teal
-    "4: Alta Mutação (Foco em Diversidade)": "#9400D3", # Roxo
+    "4: Alta Mutação": "#DC143C", # Vermelho
 }
 
 def initial_population(
@@ -182,7 +182,7 @@ def main():
     for selection_method in selection_methods:
         for configuration in configurations:
             print(
-                f"Executando: Config='{configuration['name']}'..."
+                f"Executando: Selection method='{selection_method}', Config='{configuration['name']}'..."
             )
             for i in range(50):
                 start_time = time.time()

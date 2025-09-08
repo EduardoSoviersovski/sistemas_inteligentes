@@ -180,10 +180,6 @@ def plot_route(points: List[Point], route: Route, title: str, show_ids=False):
 
 
 def plot_results_scatterplot(results: list, title: str, color_map: dict):
-    """
-    Cria um gráfico de dispersão aprimorado para visualizar todos os resultados,
-    com cores, marcadores, rótulos informativos e anotações.
-    """
     if not results:
         print(f"Aviso: Não há dados para plotar o gráfico '{title}'")
         return
@@ -274,7 +270,7 @@ def plot_results(
         ]
 
         scatter_title = (
-            f"Resultados das Configurações (Schedule: {method.capitalize()})"
+            f"Resultados das Configurações (Method: {method.capitalize()})"
         )
 
         plot_results_scatterplot(results_for_method, scatter_title, color_map)

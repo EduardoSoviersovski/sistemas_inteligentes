@@ -107,8 +107,8 @@ def main():
     ]
 
     color_map = {
-        "1: Rápida e Agressiva": "#9400D3",  # Roxo Escuro
-        "2: Clássica e Balanceada": "#FF8C00",  # Laranja Escuro
+        "1: Rápida e Agressiva": "#9400D3",  # Roxo
+        "2: Clássica e Balanceada": "#FF8C00",  # Laranja
         "3: Lenta e Exaustiva": "#008080",  # Teal
     }
 
@@ -120,7 +120,7 @@ def main():
             print(
                 f"Executando: Schedule='{schedule}', Config='{configuration['name']}'..."
             )
-            for i in range(5):
+            for i in range(200):
                 start_time = time.time()
                 route, length = simulated_annealing(
                     dist_matrix, configuration, schedule

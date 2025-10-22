@@ -3,7 +3,6 @@ import random
 
 from utils import carregar_dados, dividir_treino_teste, calcular_acuracia
 
-
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
 

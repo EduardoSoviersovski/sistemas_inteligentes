@@ -1,4 +1,5 @@
 import pandas as pd
+from pandas import DataFrame
 
 
 def carregar_dados(caminho_arquivo, features_to_ignore=[], label_col_name=None):
@@ -22,8 +23,8 @@ def carregar_dados(caminho_arquivo, features_to_ignore=[], label_col_name=None):
 
     return df_final
 
-def dividir_treino_teste(dataset, proporcao_teste=0.2, seed=42):
-    teste_df = dataset.sample(frac=proporcao_teste, random_state=seed)
+def dividir_treino_teste(dataset: DataFrame, proporcao_teste: float=0.2):
+    teste_df = dataset.sample(frac=proporcao_teste)
     treino_df = dataset.drop(teste_df.index)
     return treino_df, teste_df
 
@@ -38,22 +39,16 @@ def calcular_acuracia(teste_df, predicoes):
 
 
 def imprimir_arvore(arvore, indentacao=""):
-    """Imprime a árvore de decisão de forma legível no console."""
-
-    # Caso base: é um nó folha (contém a predição da classe)
     if not isinstance(arvore, dict):
         print(f"{indentacao}-> Classe: {arvore}")
         return
 
-    # É um nó de decisão
     feature = arvore['feature']
     valor = arvore['valor']
     print(f"{indentacao}[Feature {feature} < {valor:.4f} ?]")
 
-    # Recursão para o ramo da esquerda (True)
     print(f"{indentacao}  ├─ True:")
     imprimir_arvore(arvore['esquerda'], indentacao + "  │   ")
 
-    # Recursão para o ramo da direita (False)
     print(f"{indentacao}  └─ False:")
     imprimir_arvore(arvore['direita'], indentacao + "  │   ")

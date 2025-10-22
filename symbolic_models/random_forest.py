@@ -1,7 +1,7 @@
 import random
 from collections import Counter
 
-from decision_tree import construir_arvore_id3, predizer_amostra_arvore
+from decision_tree_id3 import construir_arvore_id3, predizer_amostra_arvore
 from utils import carregar_dados, dividir_treino_teste, calcular_acuracia
 
 def criar_amostra_bootstrap(dataset):

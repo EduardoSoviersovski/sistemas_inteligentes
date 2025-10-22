@@ -21,7 +21,7 @@ def dividir_dataset(dados_df: DataFrame, feature_name: str, valor: float):
     grupo_direita = dados_df[dados_df[feature_name] >= valor]
     return grupo_esquerda, grupo_direita
 
-def encontrar_melhor_divisao(dados_df, indices_ja_usados_ramo, indices_ignorados_global):
+def encontrar_melhor_divisao(dados_df: DataFrame, indices_ja_usados_ramo: set, indices_ignorados_global: set):
     entropia_base = calcular_entropia(dados_df)
     melhor_ganho = 0.0
     melhor_feature = None
@@ -54,21 +54,18 @@ def encontrar_melhor_divisao(dados_df, indices_ja_usados_ramo, indices_ignorados
 
     return {'feature': melhor_feature, 'valor': melhor_valor, 'ganho': melhor_ganho}
 
-def construir_arvore_recursivo(dados_df, profundidade_max, profundidade_atual, indices_ja_usados_ramo,
-                               indices_ignorados_global):
+def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profundidade_atual: int, indices_ja_usados_ramo: set,
+                               indices_ignorados_global: set):
     if dados_df.empty:
         return None
-
-    labels = dados_df['label']
-    if labels.nunique() == 1:
-        return labels.iloc[0]
 
     if profundidade_atual >= profundidade_max:
         return dados_df['label'].mode()[0]
 
     divisao = encontrar_melhor_divisao(dados_df, indices_ja_usados_ramo, indices_ignorados_global)
 
-    if divisao['ganho'] == 0 or divisao['feature'] is None:
+    GANHO_MINIMO = 0.1
+    if divisao['ganho'] < GANHO_MINIMO or divisao['feature'] is None:
         return dados_df['label'].mode()[0]
 
     feature_escolhida = divisao['feature']
@@ -97,7 +94,7 @@ def construir_arvore_recursivo(dados_df, profundidade_max, profundidade_atual, i
 
     return arvore
 
-def construir_arvore_id3(treino_df, profundidade_max=10, indices_para_ignorar=None):
+def construir_arvore_id3(treino_df: DataFrame, profundidade_max=10, indices_para_ignorar=None):
     indices_globais = set(indices_para_ignorar or [])
     return construir_arvore_recursivo(treino_df, profundidade_max, 0, set(), indices_globais)
 
@@ -115,7 +112,7 @@ def predizer_amostra_arvore(arvore, amostra_series):
 
 if __name__ == "__main__":
     caminho_arquivo = "../files/treino_sinais_vitais_com_label.txt"
-    features_para_ignorar_global = []
+    features_para_ignorar_global = ["index"]
     nome_label = "label"
 
     dataset_completo = carregar_dados(
@@ -124,17 +121,6 @@ if __name__ == "__main__":
         label_col_name=nome_label
     )
     features_cols = [col for col in dataset_completo.columns if col != "label"]
-    min_max_map = {}
-
-    for col in features_cols:
-        min_val = dataset_completo[col].min()
-        max_val = dataset_completo[col].max()
-        min_max_map[col] = (min_val, max_val)
-
-        if (max_val - min_val) != 0:
-            dataset_completo[col] = (dataset_completo[col] - min_val) / (max_val - min_val)
-        else:
-            dataset_completo[col] = 0
 
     treino, teste = dividir_treino_teste(dataset_completo, 0.3)
 
@@ -153,6 +139,5 @@ if __name__ == "__main__":
     for index, amostra_series in teste_features_df.iterrows():
         pred = predizer_amostra_arvore(arvore, amostra_series)
         predicoes_arvore.append(pred)
-    print(predicoes_arvore)
     acuracia_arvore = calcular_acuracia(teste, predicoes_arvore)
     print(f"Acurácia da Árvore de Decisão: {acuracia_arvore:.2f}%\n")

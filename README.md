@@ -6,7 +6,7 @@ Install poetry
 Run: 
 `poetry install`
 
-Install graphviz for better vizualization
+Install graphviz for better vizualization (https://graphviz.org/download/)
 
 Execute example:
 

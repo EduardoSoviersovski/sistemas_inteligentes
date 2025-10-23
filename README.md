@@ -3,9 +3,10 @@
 
 Install poetry
 
-Run:
-
+Run: 
 `poetry install`
+
+Install graphviz for better vizualization
 
 Execute example:
 

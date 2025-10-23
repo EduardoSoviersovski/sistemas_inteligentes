@@ -1,7 +1,9 @@
+import shutil
+
 from pandas import DataFrame
 
-from symbolic_models.decision_tree_commons import dividir_dataset, calcular_entropia,\
-        MAX_DEPTH, get_test_and_train_dataframes, predizer_amostra_arvore
+from symbolic_models.decision_tree_commons import dividir_dataset, calcular_entropia, \
+    MAX_DEPTH, get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
 from symbolic_models.utils import calcular_acuracia, imprimir_arvore
 
 
@@ -79,9 +81,13 @@ if __name__ == "__main__":
     teste_features_df = teste.drop(columns=["label"])
 
     predicoes_arvore = []
-    imprimir_arvore(arvore)
+
     for index, amostra_series in teste_features_df.iterrows():
         pred = predizer_amostra_arvore(arvore, amostra_series)
         predicoes_arvore.append(pred)
     acuracia_arvore = calcular_acuracia(teste, predicoes_arvore)
+    if shutil.which("dot") is not None:
+        visualizar_arvore_customizada(arvore, nome_arquivo='minha_arvore_id3')
+    else:
+        imprimir_arvore(arvore)
     print(f"Acurácia da Árvore de Decisão: {acuracia_arvore:.2f}%\n")

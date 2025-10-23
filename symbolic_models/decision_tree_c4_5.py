@@ -1,30 +1,10 @@
 import math
-from collections import Counter
-from pandas import DataFrame, Series
-from symbolic_models.utils import carregar_dados, dividir_treino_teste, calcular_acuracia, imprimir_arvore
+from pandas import DataFrame
 
+from symbolic_models.decision_tree_commons import calcular_entropia, dividir_dataset, \
+     MAX_DEPTH, get_test_and_train_dataframes, predizer_amostra_arvore
+from symbolic_models.utils import calcular_acuracia, imprimir_arvore
 
-TEST_PROPORTION = 0.3
-MAX_DEPTH = 5
-FEATURES_TO_IGNORE = ["index"]
-
-def calcular_entropia(dados_df: DataFrame):
-    if dados_df.empty:
-        return 0
-
-    contagem_labels = Counter(dados_df['label'])
-    entropia = 0.0
-    total_amostras = len(dados_df)
-
-    for label in contagem_labels:
-        probabilidade = contagem_labels[label] / total_amostras
-        entropia -= probabilidade * math.log2(probabilidade)
-    return entropia
-
-def dividir_dataset(dados_df: DataFrame, feature_name: str, valor: float):
-    grupo_esquerda = dados_df[dados_df[feature_name] < valor]
-    grupo_direita = dados_df[dados_df[feature_name] >= valor]
-    return grupo_esquerda, grupo_direita
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)
@@ -85,11 +65,7 @@ def encontrar_melhor_divisao(dados_df: DataFrame):
 
     return {'feature': melhor_feature, 'valor': melhor_valor, 'ganho': melhor_ganho_info}
 
-def construir_arvore_recursivo(
-        dados_df: DataFrame,
-        profundidade_max: int,
-        profundidade_atual: int
-):
+def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profundidade_atual: int):
     if dados_df.empty:
         return None
 
@@ -122,38 +98,14 @@ def construir_arvore_recursivo(
     }
     return arvore
 
-def construir_arvore_c4_5(treino_df: DataFrame, profundidade_max: int=10):
-    return construir_arvore_recursivo(treino_df, profundidade_max, 0)
-
-
-def predizer_amostra_arvore(arvore: dict, amostra_series: Series):
-    if not isinstance(arvore, dict):
-        return arvore
-    feature_name, valor_divisao = arvore['feature'], arvore['valor']
-
-    if amostra_series[feature_name] < valor_divisao:
-        return predizer_amostra_arvore(arvore['esquerda'], amostra_series)
-    else:
-        return predizer_amostra_arvore(arvore['direita'], amostra_series)
-
-
 if __name__ == "__main__":
-    caminho_arquivo = "./files/treino_sinais_vitais_com_label.txt"
-    features_para_ignorar_global = ["index", "feature_6"]
-    nome_label = "label"
-
-    dataset_completo = carregar_dados(
-        caminho_arquivo,
-        features_to_ignore=FEATURES_TO_IGNORE,
-        label_col_name=nome_label
+    treino, teste = get_test_and_train_dataframes(
+        "./files/treino_sinais_vitais_com_label.txt",
+        "label"
     )
-    features_cols = [col for col in dataset_completo.columns if col != "label"]
-
-    treino, teste = dividir_treino_teste(dataset_completo, TEST_PROPORTION)
 
     print("--- Treinando Árvore de Decisão (C4.5) ---")
-
-    arvore = construir_arvore_c4_5(treino, profundidade_max=MAX_DEPTH)
+    arvore = construir_arvore_recursivo(treino, MAX_DEPTH, 0)
 
     teste_features_df = teste.drop(columns=["label"])
 

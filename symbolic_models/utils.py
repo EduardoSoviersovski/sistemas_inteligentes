@@ -2,7 +2,7 @@ import pandas as pd
 from pandas import DataFrame
 
 
-def carregar_dados(caminho_arquivo, features_to_ignore=[], label_col_name=None):
+def carregar_dados(caminho_arquivo: str, features_to_ignore: list=[], label_col_name: str=None) -> DataFrame:
     df = pd.read_csv(
         caminho_arquivo,
         header=0,
@@ -23,7 +23,7 @@ def carregar_dados(caminho_arquivo, features_to_ignore=[], label_col_name=None):
 
     return df_final
 
-def dividir_treino_teste(dataset: DataFrame, proporcao_teste: float=0.2):
+def dividir_treino_teste(dataset: DataFrame, proporcao_teste: float=0.2) -> tuple[DataFrame, DataFrame]:
     teste_df = dataset.sample(frac=proporcao_teste)
     treino_df = dataset.drop(teste_df.index)
     return treino_df, teste_df
@@ -38,7 +38,7 @@ def calcular_acuracia(teste_df, predicoes):
     return (corretos / len(labels_reais)) * 100.0
 
 
-def imprimir_arvore(arvore, indentacao=""):
+def imprimir_arvore(arvore: dict, indentacao: str="") -> None:
     if not isinstance(arvore, dict):
         print(f"{indentacao}-> Classe: {arvore}")
         return

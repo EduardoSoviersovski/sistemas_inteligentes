@@ -6,7 +6,7 @@ from pandas import DataFrame, Series
 from symbolic_models.utils import carregar_dados, dividir_treino_teste
 
 TEST_PROPORTION = 0.3
-MAX_DEPTH = 10
+MAX_DEPTH = 5
 FEATURES_TO_IGNORE = ["index", "feature_6"]
 
 def calcular_entropia(dados_df: DataFrame) -> float:

@@ -5,7 +5,7 @@ from pandas import DataFrame
 def carregar_dados(caminho_arquivo, features_to_ignore=[], label_col_name=None):
     df = pd.read_csv(
         caminho_arquivo,
-        header=0,  # A primeira linha é o cabeçalho
+        header=0,
         skip_blank_lines=True
     )
     all_columns = df.columns.tolist()

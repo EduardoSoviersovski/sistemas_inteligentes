@@ -4,9 +4,12 @@ import shutil
 from pandas import DataFrame
 
 from symbolic_models.decision_tree_commons import calcular_entropia, dividir_dataset, \
-    MAX_DEPTH, get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
+    get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
 from symbolic_models.utils import calcular_acuracia, imprimir_arvore
 
+TEST_PROPORTION = 0.3
+MAX_DEPTH = 5
+FEATURES_TO_IGNORE = ["index"]
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)
@@ -103,7 +106,9 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
 if __name__ == "__main__":
     treino, teste = get_test_and_train_dataframes(
         "./files/treino_sinais_vitais_com_label.txt",
-        "label"
+        "label",
+        features_to_ignore=FEATURES_TO_IGNORE,
+        test_proportion=TEST_PROPORTION
     )
 
     print("--- Treinando Árvore de Decisão (C4.5) ---")

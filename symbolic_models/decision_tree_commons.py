@@ -6,10 +6,6 @@ from pandas import DataFrame, Series
 
 from symbolic_models.utils import carregar_dados, dividir_treino_teste
 
-TEST_PROPORTION = 0.3
-MAX_DEPTH = 5
-FEATURES_TO_IGNORE = ["index"]
-
 def calcular_entropia(dados_df: DataFrame) -> float:
     if dados_df.empty:
         return 0
@@ -23,7 +19,7 @@ def calcular_entropia(dados_df: DataFrame) -> float:
         entropia -= probabilidade * math.log2(probabilidade)
     return entropia
 
-def dividir_dataset(dados_df: DataFrame, feature_name: str, valor: float) -> tuple[Series, Series]:
+def dividir_dataset(dados_df: DataFrame, feature_name: str, valor: float) -> tuple[DataFrame, DataFrame]:
     grupo_esquerda = dados_df[dados_df[feature_name] < valor]
     grupo_direita = dados_df[dados_df[feature_name] >= valor]
     return grupo_esquerda, grupo_direita
@@ -38,13 +34,13 @@ def predizer_amostra_arvore(arvore: dict, amostra_series: Series):
     else:
         return predizer_amostra_arvore(arvore['direita'], amostra_series)
 
-def get_test_and_train_dataframes(path: str, label: str):
+def get_test_and_train_dataframes(path: str, label: str, features_to_ignore: list[str], test_proportion: float) -> tuple[DataFrame, DataFrame]:
     dataset_completo = carregar_dados(
         path,
-        features_to_ignore=FEATURES_TO_IGNORE,
+        features_to_ignore=features_to_ignore,
         label_col_name=label
     )
-    return dividir_treino_teste(dataset_completo, TEST_PROPORTION)
+    return dividir_treino_teste(dataset_completo, test_proportion)
 
 def _gerar_dot_recursivo(arvore, dot, node_id_counter):
     current_id = str(node_id_counter[0])

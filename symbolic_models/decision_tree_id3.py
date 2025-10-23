@@ -1,7 +1,7 @@
 import math
 from collections import Counter
 from pandas import DataFrame
-from utils import carregar_dados, dividir_treino_teste, calcular_acuracia, imprimir_arvore
+from symbolic_models.utils import carregar_dados, dividir_treino_teste, calcular_acuracia, imprimir_arvore
 
 def calcular_entropia(dados_df: DataFrame):
     if dados_df.empty:
@@ -111,7 +111,7 @@ def predizer_amostra_arvore(arvore, amostra_series):
 
 
 if __name__ == "__main__":
-    caminho_arquivo = "../files/treino_sinais_vitais_com_label.txt"
+    caminho_arquivo = "./files/treino_sinais_vitais_com_label.txt"
     features_para_ignorar_global = ["index"]
     nome_label = "label"
 

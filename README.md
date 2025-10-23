@@ -13,8 +13,10 @@ Execute example:
 
 `python -m genetic.genetic`
 
-`python -m symbolic_models.decision_tree`
+`python -m symbolic_models.decision_tree_id3`
+
+`python -m symbolic_models.decision_tree_c4_5`
 
 `python -m symbolic_models.random_forest`
 
-`python -m symbolic_models.multi_layer_perceptron`
+`python -m symbolic_models.multilayer_perceptron`

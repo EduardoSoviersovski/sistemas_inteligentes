@@ -1,7 +1,7 @@
 import math
 from collections import Counter
-from pandas import DataFrame
-from utils import carregar_dados, dividir_treino_teste, calcular_acuracia, imprimir_arvore
+from pandas import DataFrame, Series
+from symbolic_models.utils import carregar_dados, dividir_treino_teste, calcular_acuracia, imprimir_arvore
 
 def calcular_entropia(dados_df: DataFrame):
     if dados_df.empty:
@@ -85,8 +85,13 @@ def encontrar_melhor_divisao(dados_df: DataFrame, indices_ja_usados_ramo: set, i
 
     return {'feature': melhor_feature, 'valor': melhor_valor, 'ganho': melhor_ganho_info}
 
-def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profundidade_atual: int, indices_ja_usados_ramo: set,
-                               indices_ignorados_global: set):
+def construir_arvore_recursivo(
+        dados_df: DataFrame,
+        profundidade_max: int,
+        profundidade_atual: int,
+        indices_ja_usados_ramo: set,
+        indices_ignorados_global: set
+):
     if dados_df.empty:
         return None
 
@@ -125,12 +130,12 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
 
     return arvore
 
-def construir_arvore_c4_5(treino_df: DataFrame, profundidade_max=10, indices_para_ignorar=None):
+def construir_arvore_c4_5(treino_df: DataFrame, profundidade_max: int=10, indices_para_ignorar: list[str|int]=None):
     indices_globais = set(indices_para_ignorar or [])
     return construir_arvore_recursivo(treino_df, profundidade_max, 0, set(), indices_globais)
 
 
-def predizer_amostra_arvore(arvore, amostra_series):
+def predizer_amostra_arvore(arvore: dict, amostra_series: Series):
     if not isinstance(arvore, dict):
         return arvore
     feature_name, valor_divisao = arvore['feature'], arvore['valor']
@@ -142,7 +147,7 @@ def predizer_amostra_arvore(arvore, amostra_series):
 
 
 if __name__ == "__main__":
-    caminho_arquivo = "../files/treino_sinais_vitais_com_label.txt"
+    caminho_arquivo = "./files/treino_sinais_vitais_com_label.txt"
     features_para_ignorar_global = ["index", "feature_6"]
     nome_label = "label"
 

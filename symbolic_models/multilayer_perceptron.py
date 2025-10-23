@@ -1,7 +1,7 @@
 import math
 import random
 
-from utils import carregar_dados, dividir_treino_teste, calcular_acuracia
+from symbolic_models.utils import carregar_dados, dividir_treino_teste, calcular_acuracia
 
 def sigmoid(x):
     return 1 / (1 + math.exp(-x))
@@ -96,28 +96,45 @@ class RedeNeural:
         return saidas.index(max(saidas)) + 1
 
 if __name__ == '__main__':
-    caminho_arquivo = '../files/treino_sinais_vitais_com_label.txt'
-    dataset_completo = carregar_dados(caminho_arquivo)
-    
-    # Normalização dos dados (importante para a Rede Neural)
-    num_features = len(dataset_completo[0]) - 1
-    min_max = [[min(row[i] for row in dataset_completo), max(row[i] for row in dataset_completo)] for i in range(num_features)]
-    
-    for row in dataset_completo:
-        for i in range(num_features):
-            row[i] = (row[i] - min_max[i][0]) / (min_max[i][1] - min_max[i][0])
+    caminho_arquivo = './files/treino_sinais_vitais_com_label.txt'
+    features_para_ignorar_global = ["index"]
+    nome_label = "label"
 
-    treino, teste = dividir_treino_teste(dataset_completo, 0.01)
+    dataset_completo = carregar_dados(
+        caminho_arquivo,
+        features_to_ignore=features_para_ignorar_global,
+        label_col_name=nome_label
+    )
 
-    # --- Teste da Rede Neural ---
+    features_cols = [col for col in dataset_completo.columns if col != nome_label]
+    min_vals = dataset_completo[features_cols].min()
+    max_vals = dataset_completo[features_cols].max()
+
+    range_vals = max_vals - min_vals
+    range_vals[range_vals == 0] = 1
+
+    dataset_completo[features_cols] = (dataset_completo[features_cols] - min_vals) / range_vals
+
+    treino_df, teste_df = dividir_treino_teste(dataset_completo, 0.3)
+
     print("--- Treinando Rede Neural ---")
-    n_entradas = len(treino[0]) - 1
-    n_saidas = len(set(row[-1] for row in treino)) # 4 classes
-    n_ocultas = 10 # Número de neurônios na camada oculta
-    
+
+    treino_list = treino_df.values.tolist()
+    teste_list = teste_df.values.tolist()
+
+    n_entradas = len(features_cols)
+
+    labels_unicos = dataset_completo[nome_label].unique()
+    n_saidas = len(labels_unicos)
+    n_ocultas = 10
+
+    print(f"Entradas: {n_entradas}, Saídas: {n_saidas} (Classes: {sorted(labels_unicos)})")
+
     nn = RedeNeural(n_entradas, n_ocultas, n_saidas)
-    nn.treinar(treino, epocas=1000, taxa_aprendizado=0.3)
-    
-    predicoes_nn = [nn.predizer(linha[:-1]) for linha in teste]
-    acuracia_nn = calcular_acuracia(teste, predicoes_nn)
+
+    nn.treinar(treino_list, epocas=1000, taxa_aprendizado=0.3)
+
+    predicoes_nn = [nn.predizer(linha[:-1]) for linha in teste_list]
+
+    acuracia_nn = calcular_acuracia(teste_df, predicoes_nn)
     print(f"\nAcurácia da Rede Neural: {acuracia_nn:.2f}%\n")

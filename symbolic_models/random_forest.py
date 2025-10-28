@@ -1,7 +1,7 @@
 from collections import Counter
 from pandas import DataFrame, Series
 
-from symbolic_models.decision_tree_commons import get_test_and_train_dataframes
+from symbolic_models.commons import get_test_and_train_dataframes
 from symbolic_models.decision_tree_id3 import predizer_amostra_arvore, construir_arvore_recursivo
 from symbolic_models.utils import calcular_acuracia
 

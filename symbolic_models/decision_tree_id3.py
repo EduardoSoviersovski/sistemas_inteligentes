@@ -2,13 +2,13 @@ import shutil
 
 from pandas import DataFrame
 
-from symbolic_models.decision_tree_commons import dividir_dataset, calcular_entropia, \
+from symbolic_models.commons import dividir_dataset, calcular_entropia, \
     get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
 from symbolic_models.utils import calcular_acuracia, imprimir_arvore
 
 TEST_PROPORTION = 0.3
 MAX_DEPTH = 5
-FEATURES_TO_IGNORE = ["index"]
+FEATURES_TO_IGNORE = ["index", "feature_6"]
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)

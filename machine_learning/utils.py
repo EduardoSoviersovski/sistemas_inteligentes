@@ -29,7 +29,7 @@ def dividir_treino_teste(dataset: DataFrame, proporcao_teste: float=0.2) -> tupl
     return treino_df, teste_df
 
 def calcular_acuracia(teste_df, predicoes):
-    labels_reais = teste_df['label'].tolist()
+    labels_reais = teste_df['classe'].tolist()
     if len(labels_reais) != len(predicoes):
         print("Erro: Tamanho da lista de predições é diferente do teste.")
         return 0.0
@@ -45,7 +45,7 @@ def imprimir_arvore(arvore: dict, indentacao: str="") -> None:
 
     feature = arvore['feature']
     valor = arvore['valor']
-    print(f"{indentacao}[Feature {feature} < {valor:.4f} ?]")
+    print(f"{indentacao}[Feature {feature} > {valor:.4f} ?]")
 
     print(f"{indentacao}  ├─ True:")
     imprimir_arvore(arvore['esquerda'], indentacao + "  │   ")

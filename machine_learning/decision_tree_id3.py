@@ -2,13 +2,14 @@ import shutil
 
 from pandas import DataFrame
 
-from symbolic_models.commons import dividir_dataset, calcular_entropia, \
+from machine_learning.commons import dividir_dataset, calcular_entropia, \
     get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
-from symbolic_models.utils import calcular_acuracia, imprimir_arvore
+from machine_learning.utils import calcular_acuracia, imprimir_arvore
 
 TEST_PROPORTION = 0.3
 MAX_DEPTH = 5
-FEATURES_TO_IGNORE = ["index", "feature_6"]
+LABEL = "classe"
+FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)
@@ -16,7 +17,7 @@ def encontrar_melhor_divisao(dados_df: DataFrame):
     melhor_feature = None
     melhor_valor = None
 
-    features_cols = [col for col in dados_df.columns if col != 'label']
+    features_cols = [col for col in dados_df.columns if col != 'classe']
 
     for feature_name in features_cols:
         valores_unicos = set(dados_df[feature_name])
@@ -43,13 +44,13 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
         return None
 
     if profundidade_atual >= profundidade_max:
-        return dados_df['label'].mode()[0]
+        return dados_df['classe'].mode()[0]
 
     divisao = encontrar_melhor_divisao(dados_df)
 
     GANHO_MINIMO = 0.1
     if divisao['ganho'] < GANHO_MINIMO or divisao['feature'] is None:
-        return dados_df['label'].mode()[0]
+        return dados_df['classe'].mode()[0]
 
     feature_escolhida = divisao['feature']
 
@@ -75,7 +76,7 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
 if __name__ == "__main__":
     treino, teste = get_test_and_train_dataframes(
         "./files/treino_sinais_vitais_com_label.txt",
-        "label",
+        LABEL,
         features_to_ignore=FEATURES_TO_IGNORE,
         test_proportion=TEST_PROPORTION
     )
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     print("--- Treinando Árvore de Decisão (ID3) ---")
     arvore = construir_arvore_recursivo(treino, MAX_DEPTH, 0)
 
-    teste_features_df = teste.drop(columns=["label"])
+    teste_features_df = teste.drop(columns=[LABEL])
 
     predicoes_arvore = []
 

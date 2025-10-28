@@ -3,13 +3,14 @@ import shutil
 
 from pandas import DataFrame
 
-from symbolic_models.commons import calcular_entropia, dividir_dataset, \
+from machine_learning.commons import calcular_entropia, dividir_dataset, \
     get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
-from symbolic_models.utils import calcular_acuracia, imprimir_arvore
+from machine_learning.utils import calcular_acuracia, imprimir_arvore
 
 TEST_PROPORTION = 0.3
 MAX_DEPTH = 5
-FEATURES_TO_IGNORE = ["index", "feature_6"]
+LABEL = "classe"
+FEATURES_TO_IGNORE = ["index", "gravidade"]
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)
@@ -17,7 +18,7 @@ def encontrar_melhor_divisao(dados_df: DataFrame):
     ganhos_informacao_validos = []
     candidatos_de_divisao = []
 
-    features_cols = [col for col in dados_df.columns if col != 'label']
+    features_cols = [col for col in dados_df.columns if col != 'classe']
 
     for feature_name in features_cols:
         valores_unicos_ordenados = sorted(set(dados_df[feature_name]))
@@ -75,13 +76,13 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
         return None
 
     if profundidade_atual >= profundidade_max:
-        return dados_df['label'].mode()[0]
+        return dados_df['classe'].mode()[0]
 
     divisao = encontrar_melhor_divisao(dados_df)
 
     GANHO_MINIMO = 0.01
     if divisao['ganho'] < GANHO_MINIMO or divisao['feature'] is None:
-        return dados_df['label'].mode()[0]
+        return dados_df['classe'].mode()[0]
 
     feature_escolhida = divisao['feature']
 
@@ -114,7 +115,7 @@ if __name__ == "__main__":
     print("--- Treinando Árvore de Decisão (C4.5) ---")
     arvore = construir_arvore_recursivo(treino, MAX_DEPTH, 0)
 
-    teste_features_df = teste.drop(columns=["label"])
+    teste_features_df = teste.drop(columns=[LABEL])
 
     predicoes_arvore = []
     for index, amostra_series in teste_features_df.iterrows():

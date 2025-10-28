@@ -6,13 +6,13 @@ import graphviz
 from pandas import DataFrame, Series
 from sklearn.metrics import classification_report, confusion_matrix
 
-from symbolic_models.utils import carregar_dados, dividir_treino_teste
+from machine_learning.utils import carregar_dados, dividir_treino_teste
 
 def calcular_entropia(dados_df: DataFrame) -> float:
     if dados_df.empty:
         return 0
 
-    contagem_labels = Counter(dados_df['label'])
+    contagem_labels = Counter(dados_df['classe'])
     entropia = 0.0
     total_amostras = len(dados_df)
 

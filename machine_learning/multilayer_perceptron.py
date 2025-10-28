@@ -2,13 +2,12 @@ import math
 import random
 import numpy as np
 
-from symbolic_models.commons import random_oversample, visualizar_rede_neural, class_labels
-from symbolic_models.utils import dividir_treino_teste, carregar_dados, calcular_acuracia
-from sklearn.metrics import classification_report, confusion_matrix
+from machine_learning.commons import random_oversample, visualizar_rede_neural, class_labels
+from machine_learning.utils import dividir_treino_teste, carregar_dados, calcular_acuracia
 
 CAMINHO_ARQUIVO = 'files/treino_sinais_vitais_com_label.txt'
-NOME_LABEL = "label"
-FEATURES_TO_IGNORE = ["index", "feature_6"]
+LABEL = "classe"
+FEATURES_TO_IGNORE = ["index", "gravidade"]
 
 TEST_PROPORTION = 0.2
 VALIDATION_PROPORTION = 0.2
@@ -279,10 +278,10 @@ if __name__ == '__main__':
     dataset_completo = carregar_dados(
         CAMINHO_ARQUIVO,
         features_to_ignore=FEATURES_TO_IGNORE,
-        label_col_name=NOME_LABEL
+        label_col_name=LABEL
     )
 
-    features_cols = [col for col in dataset_completo.columns if col != NOME_LABEL]
+    features_cols = [col for col in dataset_completo.columns if col != LABEL]
 
     # Normalização (Min-Max)
     min_vals = dataset_completo[features_cols].min()
@@ -309,7 +308,7 @@ if __name__ == '__main__':
     print(f"Tam. Treino Balanceado: {len(treino_list_balanceada)}")
 
     n_entradas = len(features_cols)
-    labels_unicos = dataset_completo[NOME_LABEL].unique()
+    labels_unicos = dataset_completo[LABEL].unique()
     labels_ordenados = sorted(labels_unicos)
     n_saidas = len(labels_unicos)
 
@@ -326,7 +325,7 @@ if __name__ == '__main__':
     print("\n--- Avaliando Modelo ---")
     # 1. Obter as predições do modelo (como antes)
     predicoes_nn = [nn.predizer(linha[:-1]) for linha in teste_list]
-    class_labels(predicoes_nn, teste_df, NOME_LABEL, labels_ordenados)
+    class_labels(predicoes_nn, teste_df, LABEL, labels_ordenados)
     # --- Métrica 3: Acurácia (a que você já tinha) ---
     # Nota: A acurácia também está presente no 'classification_report'
     acuracia_nn = calcular_acuracia(teste_df, predicoes_nn)

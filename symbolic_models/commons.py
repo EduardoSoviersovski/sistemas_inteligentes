@@ -4,6 +4,7 @@ from collections import Counter
 
 import graphviz
 from pandas import DataFrame, Series
+from sklearn.metrics import classification_report, confusion_matrix
 
 from symbolic_models.utils import carregar_dados, dividir_treino_teste
 
@@ -78,7 +79,6 @@ def _gerar_dot_recursivo(arvore, dot, node_id_counter):
 
     return current_id
 
-
 def visualizar_arvore_customizada(arvore, nome_arquivo='arvore_customizada'):
     dot = graphviz.Digraph(comment='Árvore de Decisão Customizada')
     dot.attr(rankdir='TB')
@@ -92,7 +92,6 @@ def visualizar_arvore_customizada(arvore, nome_arquivo='arvore_customizada'):
     except Exception as e:
         print(f"Erro ao renderizar com Graphviz: {e}")
         print("Verifique se o software Graphviz está instalado e no PATH do sistema.")
-
 
 def visualizar_rede_neural(nn, feature_names, class_labels, nome_arquivo='rede_neural'):
     dot = graphviz.Digraph(comment='Rede Neural')
@@ -180,3 +179,27 @@ def random_oversample(dados_lista, idx_label=-1):
     print(f"Dataset balanceado com {len(dados_balanceados)} amostras.")
     random.shuffle(dados_balanceados)
     return dados_balanceados
+
+def class_labels(predicoes_nn, teste_df, nome_label, labels_ordenados):
+    y_verdadeiro = teste_df[nome_label].values.tolist()
+    nomes_classes_str = [str(int(l)) for l in labels_ordenados]
+
+    print("\n--- Relatório de Classificação (Precision, Recall, F1-Score) ---")
+    report = classification_report(
+        y_verdadeiro,
+        predicoes_nn,
+        target_names=nomes_classes_str,
+        labels=labels_ordenados,
+        zero_division=0
+    )
+    print(report)
+
+    # --- Métrica 2: Matriz de Confusão ---
+    print("\n--- Matriz de Confusão ---")
+    print("(Linhas = Real, Colunas = Predito)\n")
+    cm = confusion_matrix(y_verdadeiro, predicoes_nn, labels=labels_ordenados)
+
+    # Usar Pandas para formatar a matriz de confusão de forma legível
+    cm_df = DataFrame(cm,index=[f"Real: {name}" for name in nomes_classes_str],
+                    columns=[f"Pred: {name}" for name in nomes_classes_str])
+    print(cm_df)

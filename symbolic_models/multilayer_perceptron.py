@@ -2,8 +2,9 @@ import math
 import random
 import numpy as np
 
-from symbolic_models.commons import random_oversample, visualizar_rede_neural
+from symbolic_models.commons import random_oversample, visualizar_rede_neural, class_labels
 from symbolic_models.utils import dividir_treino_teste, carregar_dados, calcular_acuracia
+from sklearn.metrics import classification_report, confusion_matrix
 
 CAMINHO_ARQUIVO = 'files/treino_sinais_vitais_com_label.txt'
 NOME_LABEL = "label"
@@ -317,19 +318,22 @@ if __name__ == '__main__':
     print("\n--- Treinando Rede Neural Otimizada ---")
     nn = RedeNeural(n_entradas, N_OCULTAS, n_saidas)
 
-    # Chama o treino com os novos hiperparâmetros
     nn.treinar(
         dados_treino=treino_list_balanceada,
         dados_validacao=validacao_list
     )
 
     print("\n--- Avaliando Modelo ---")
+    # 1. Obter as predições do modelo (como antes)
     predicoes_nn = [nn.predizer(linha[:-1]) for linha in teste_list]
+    class_labels(predicoes_nn, teste_df, NOME_LABEL, labels_ordenados)
+    # --- Métrica 3: Acurácia (a que você já tinha) ---
+    # Nota: A acurácia também está presente no 'classification_report'
     acuracia_nn = calcular_acuracia(teste_df, predicoes_nn)
+    print(f"\nAcurácia final (calculada pela sua função): {acuracia_nn:.2f}%\n")
 
+    # --- Visualização da Rede (como antes) ---
     try:
-        visualizar_rede_neural(nn, features_cols, labels_ordenados, nome_arquivo='rede_neural_graph')
+        visualizar_rede_neural(nn, features_cols, labels_ordenados, nome_arquivo='rede_neural_graph_v2')
     except Exception as e:
         print(f"Erro ao gerar visualização da rede: {e}")
-
-    print(f"\nAcurácia final da Rede Neural: {acuracia_nn:.2f}%\n")

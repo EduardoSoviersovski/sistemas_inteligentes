@@ -10,7 +10,7 @@ from machine_learning.utils import calcular_acuracia, imprimir_arvore
 TEST_PROPORTION = 0.3
 MAX_DEPTH = 5
 LABEL = "classe"
-FEATURES_TO_IGNORE = ["index", "gravidade"]
+FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
 
 def encontrar_melhor_divisao(dados_df: DataFrame):
     entropia_base = calcular_entropia(dados_df)
@@ -107,7 +107,7 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
 if __name__ == "__main__":
     treino, teste = get_test_and_train_dataframes(
         "./files/treino_sinais_vitais_com_label.txt",
-        "label",
+        LABEL,
         features_to_ignore=FEATURES_TO_IGNORE,
         test_proportion=TEST_PROPORTION
     )

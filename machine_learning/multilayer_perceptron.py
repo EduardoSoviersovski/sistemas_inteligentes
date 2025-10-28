@@ -7,7 +7,7 @@ from machine_learning.utils import dividir_treino_teste, carregar_dados, calcula
 
 CAMINHO_ARQUIVO = 'files/treino_sinais_vitais_com_label.txt'
 LABEL = "classe"
-FEATURES_TO_IGNORE = ["index", "gravidade"]
+FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
 
 TEST_PROPORTION = 0.2
 VALIDATION_PROPORTION = 0.2

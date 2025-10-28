@@ -9,7 +9,7 @@ NUM_TREES = 10
 TEST_PROPORTION = 0.3
 MAX_DEPTH = 5
 LABEL = "classe"
-FEATURES_TO_IGNORE = ["index", "gravidade"]
+FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
 
 def criar_amostra_bootstrap(dataset_df: DataFrame):
     return dataset_df.sample(n=len(dataset_df), replace=True, ignore_index=True)

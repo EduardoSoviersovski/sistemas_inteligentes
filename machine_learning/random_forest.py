@@ -1,9 +1,9 @@
 from collections import Counter
 from pandas import DataFrame, Series
 
-from machine_learning.commons import get_test_and_train_dataframes
+from machine_learning.commons import get_test_and_train_dataframes, class_labels
 from machine_learning.decision_tree_id3 import predizer_amostra_arvore, construir_arvore_recursivo
-from machine_learning.utils import calcular_acuracia
+from machine_learning.utils import calcular_acuracia, carregar_dados
 
 NUM_TREES = 10
 TEST_PROPORTION = 0.3
@@ -35,6 +35,13 @@ def random_forest_predicao(floresta: list, amostra_series: Series):
 
 
 if __name__ == '__main__':
+    dataset_completo = carregar_dados(
+        "./files/treino_sinais_vitais_com_label.txt",
+        features_to_ignore=FEATURES_TO_IGNORE,
+        label_col_name=LABEL
+    )
+    labels_unicos = dataset_completo[LABEL].unique()
+    labels_ordenados = sorted(labels_unicos)
     treino, teste = get_test_and_train_dataframes(
         "./files/treino_sinais_vitais_com_label.txt",
         LABEL,
@@ -55,6 +62,8 @@ if __name__ == '__main__':
     for index, amostra_series in teste_features_df.iterrows():
         pred = random_forest_predicao(floresta, amostra_series)
         predicoes_rf.append(pred)
+
+    class_labels(predicoes_rf, teste, LABEL, labels_ordenados)
 
     acuracia_rf = calcular_acuracia(teste, predicoes_rf)
     print(f"Acurácia do Random Forest: {acuracia_rf:.2f}%\n")

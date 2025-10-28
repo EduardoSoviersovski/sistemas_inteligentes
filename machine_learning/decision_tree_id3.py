@@ -3,10 +3,10 @@ import shutil
 from pandas import DataFrame
 
 from machine_learning.commons import dividir_dataset, calcular_entropia, \
-    get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada
-from machine_learning.utils import calcular_acuracia, imprimir_arvore
+    get_test_and_train_dataframes, predizer_amostra_arvore, visualizar_arvore_customizada, class_labels
+from machine_learning.utils import calcular_acuracia, imprimir_arvore, carregar_dados
 
-TEST_PROPORTION = 0.3
+TEST_PROPORTION = 0.2
 MAX_DEPTH = 5
 LABEL = "classe"
 FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
@@ -74,6 +74,11 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
     return arvore
 
 if __name__ == "__main__":
+    dataset_completo = carregar_dados(
+        "./files/treino_sinais_vitais_com_label.txt",
+        features_to_ignore=FEATURES_TO_IGNORE,
+        label_col_name=LABEL
+    )
     treino, teste = get_test_and_train_dataframes(
         "./files/treino_sinais_vitais_com_label.txt",
         LABEL,
@@ -85,12 +90,15 @@ if __name__ == "__main__":
     arvore = construir_arvore_recursivo(treino, MAX_DEPTH, 0)
 
     teste_features_df = teste.drop(columns=[LABEL])
-
+    labels_unicos = dataset_completo[LABEL].unique()
+    labels_ordenados = sorted(labels_unicos)
     predicoes_arvore = []
 
     for index, amostra_series in teste_features_df.iterrows():
         pred = predizer_amostra_arvore(arvore, amostra_series)
         predicoes_arvore.append(pred)
+
+    class_labels(predicoes_arvore, teste, LABEL, labels_ordenados)
     acuracia_arvore = calcular_acuracia(teste, predicoes_arvore)
     if shutil.which("dot") is not None:
         visualizar_arvore_customizada(arvore, nome_arquivo='minha_arvore_id3')

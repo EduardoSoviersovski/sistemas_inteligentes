@@ -8,6 +8,7 @@ from machine_learning.utils import calcular_acuracia, imprimir_arvore, carregar_
 
 TEST_PROPORTION = 0.2
 MAX_DEPTH = 5
+MINIMUM_GAIN = 0.1
 LABEL = "classe"
 FEATURES_TO_IGNORE = ["index", "gravidade", "pSist", "pDiast"]
 
@@ -48,8 +49,8 @@ def construir_arvore_recursivo(dados_df: DataFrame, profundidade_max: int, profu
 
     divisao = encontrar_melhor_divisao(dados_df)
 
-    GANHO_MINIMO = 0.1
-    if divisao['ganho'] < GANHO_MINIMO or divisao['feature'] is None:
+
+    if divisao['ganho'] < MINIMUM_GAIN or divisao['feature'] is None:
         return dados_df['classe'].mode()[0]
 
     feature_escolhida = divisao['feature']
